@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import SignUpSerializer
+from .serializers import SignUpSerializer, LoginSerializer
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -29,6 +29,7 @@ class SignUpView(generics.GenericAPIView):
 
 class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
 
     def post(self, request: Request):
         email = request.data.get("email")
@@ -38,9 +39,11 @@ class LoginView(generics.GenericAPIView):
 
         if user is not None:
             tokens = create_jwt_pair_for_user(user)
+            serialized_user = LoginSerializer(user)
             response = {
                 "message": "Login Successful",
                 "token": tokens,
+                "user": serialized_user.data
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:

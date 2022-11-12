@@ -11,7 +11,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password']
+        fields = ['id', 'email', 'username', 'password',
+                  'city', 'state', 'country', ]
 
     def validate(self, attrs):
         email_exists = User.objects.filter(email=attrs['email']).exists
@@ -31,6 +32,15 @@ class SignUpSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    email = serializers.CharField(max_length=80)
+    username = serializers.CharField(max_length=45)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'city', 'state', 'country', ]
 
 
 class CurrentUserPostsSerializer(serializers.ModelSerializer):

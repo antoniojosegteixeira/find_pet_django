@@ -38,7 +38,7 @@ class User(AbstractUser):
     email = models.CharField(max_length=80, unique=True)
     username = models.CharField(max_length=45)
     city = models.CharField(max_length=100)
-    state = models.CharField(max_length=2)
+    state = models.CharField(max_length=40)
     country = models.CharField(max_length=45)
 
     objects = CustomUserManager()
