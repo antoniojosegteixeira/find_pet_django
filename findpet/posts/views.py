@@ -4,7 +4,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.pagination import PageNumberPagination
 from .serializers import PostSerializer, PostImageSerializer, PostSerializerWithImages, CreatedPostSerializer
 from .models import Post, PostImage
 from accounts.serializers import CurrentUserPostsSerializer
@@ -68,16 +70,24 @@ class PostRetrieveUpdateDeleteView(
         return self.destroy(request, *args, **kwargs)
 
 
-@api_view(['GET'])
-@permission_classes([AuthorOrReadOnly])
-def get_posts_for_current_user(request: Request):
-    user = request.user
-    serializer = CurrentUserPostsSerializer(instance=user)
+class CurrentUserPostsView(
+    APIView,
+    PageNumberPagination,
+):
+    serializer_class = CurrentUserPostsSerializer
+    queryset = Post.objects.all()
+    permission_classes = [AuthorOrReadOnly]
+    pagination_class = PageNumberPagination
 
-    return Response(
-        data=serializer.data,
-        status=status.HTTP_200_OK
-    )
+    def get(self, request: Request, *args, **kwargs):
+        post_details = Post.objects.filter(author=request.user.id)
+        page = self.paginate_queryset(queryset=post_details, request=request)
+
+        if page is not None:
+            serializer = PostSerializerWithImages(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(serializer.data)
 
 
 @api_view(['POST'])
